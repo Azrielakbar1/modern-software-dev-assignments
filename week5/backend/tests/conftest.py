@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 from collections.abc import Generator
 
 import pytest
@@ -16,8 +17,15 @@ def client() -> Generator[TestClient, None, None]:
     db_fd, db_path = tempfile.mkstemp()
     os.close(db_fd)
 
-    engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    engine = create_engine(
+        f"sqlite:///{db_path}",
+        connect_args={"check_same_thread": False}
+    )
+    TestingSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=engine
+    )
     Base.metadata.create_all(bind=engine)
 
     def override_get_db():
@@ -36,4 +44,9 @@ def client() -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
 
-    os.unlink(db_path)
+    # 🔥 FIX WINDOWS LOCK
+    time.sleep(0.2)
+    try:
+        os.unlink(db_path)
+    except PermissionError:
+        pass
