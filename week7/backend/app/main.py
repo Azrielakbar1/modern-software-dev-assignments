@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -28,6 +29,18 @@ def startup_event() -> None:
 @app.get("/")
 async def root() -> FileResponse:
     return FileResponse("frontend/index.html")
+
+@router.get("/trigger-ai-review")
+def trigger_review():
+    # Bad Practice: Hardcoded Secret (OWASP Vulnerability)
+    super_secret_api_key = "sk-live-1234567890abcdef"
+    
+    # Bad Practice: Menelan error tanpa logging (Silent Fail)
+    try:
+        data = {"key": super_secret_api_key}
+        return data
+    except Exception:
+        pass
 
 
 # Routers
